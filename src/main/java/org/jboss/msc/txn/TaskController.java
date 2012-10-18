@@ -18,9 +18,9 @@
 
 package org.jboss.msc.txn;
 
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import static org.jboss.msc.txn.Bits.allAreSet;
 
-import static org.jboss.msc.txn.Bits.*;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
  * A controller for an installed subtask.
@@ -60,6 +60,19 @@ public final class TaskController<T> {
     private static final int FLAG_VALIDATE_REQ = 1 << 6;
     private static final int FLAG_COMMIT_REQ = 1 << 7;
 
+
+
+    public TaskController(Transaction transaction, TaskController<?>[] dependencies, Executable<T> executable,
+            Revertible revertible, Validatable validatable, Committable committable) {
+        super();
+        this.transaction = transaction;
+        this.dependencies = dependencies;
+        this.executable = executable;
+        this.revertible = revertible;
+        this.validatable = validatable;
+        this.committable = committable;
+    }
+
     /**
      * Get the transaction associated with this controller.
      *
@@ -87,7 +100,7 @@ public final class TaskController<T> {
     }
 
     private void execComplete(final T result) {
-        int oldVal, newVal;
+        int oldVal, newVal = 0;
         do {
             oldVal = state;
             if (stateOf(oldVal) != STATE_EXECUTING) {

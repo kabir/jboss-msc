@@ -19,6 +19,7 @@
 package org.jboss.msc.txn;
 
 import java.util.Collection;
+
 import org.jboss.msc.value.ReadableValue;
 import org.jboss.msc.value.WritableValue;
 
@@ -31,6 +32,7 @@ import org.jboss.msc.value.WritableValue;
 public final class TaskBuilder<T> {
 
     private final RootTransaction transaction;
+    private final Object subtask;
     private Executable<T> executable;
     private Validatable validatable;
     private Revertible revertible;
@@ -39,6 +41,7 @@ public final class TaskBuilder<T> {
     TaskBuilder(final RootTransaction transaction, final Executable<T> executable, final Object subtask) {
         this.transaction = transaction;
         this.executable = executable;
+        this.subtask = subtask;
         if (subtask instanceof Validatable) validatable = (Validatable) subtask;
         if (subtask instanceof Revertible) revertible = (Revertible) subtask;
         if (subtask instanceof Committable) committable = (Committable) subtask;

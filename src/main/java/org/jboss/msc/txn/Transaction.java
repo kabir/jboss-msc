@@ -18,6 +18,13 @@
 
 package org.jboss.msc.txn;
 
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.locks.LockSupport.park;
+import static java.util.concurrent.locks.LockSupport.unpark;
+import static org.jboss.msc.txn.Bits.allAreClear;
+import static org.jboss.msc.txn.Bits.allAreSet;
+import static org.jboss.msc.txn.Log.log;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,17 +33,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import static java.lang.Thread.currentThread;
-import static java.util.concurrent.locks.LockSupport.park;
-import static java.util.concurrent.locks.LockSupport.unpark;
-import static org.jboss.msc.txn.Bits.allAreClear;
-import static org.jboss.msc.txn.Bits.allAreSet;
-import static org.jboss.msc.txn.Log.log;
-
 /**
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
  */
-public final class Transaction extends AbstractAttachable {
+public class Transaction extends AbstractAttachable {
 
     /**
      * Create a new subtask transaction.
@@ -269,6 +269,17 @@ public final class Transaction extends AbstractAttachable {
      * @return {@code true} if rollback was initiated, or {@code false} if another thread has already committed or rolled back
      */
     public boolean rollback(TransactionListener completionListener) {
+        return false;
+    }
+
+    boolean isParentOf(Transaction transaction) {
+        Transaction parent = transaction;
+        while (parent != null) {
+            if (parent == this) {
+                return true;
+            }
+            parent = parent.parent;
+        }
         return false;
     }
 
